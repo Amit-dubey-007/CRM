@@ -1,0 +1,161 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-[#F8FAFC]">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SpaFlow AI CRM{% endblock %}</title>
+    <!-- Tailwind CSS v4 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    
+    <!-- Google Fonts: Plus Jakarta Sans for ultra-clean modern SaaS typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        /* Custom scrollbar matching professional SaaS design */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #E5E7EB;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #D1D5DB;
+        }
+    </style>
+</head>
+<body class="h-full flex text-slate-900 overflow-hidden">
+    
+    <!-- Left Sidebar Include -->
+    {% include "clinics/includes/sidebar.html" %}
+
+    <!-- Main View Wrapper (Leaves space for fixed sidebar on desktop) -->
+    <div class="flex flex-1 flex-col lg:pl-64 h-full overflow-hidden">
+        
+        <!-- Sticky Top Navbar Include -->
+        {% include "clinics/includes/navbar.html" %}
+
+        <!-- Scrollable Main Content & Footer Area -->
+        <div class="flex-1 overflow-y-auto flex flex-col justify-between">
+            <main class="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+                
+                <!-- Feedback / Toast Messages standard block -->
+                {% if messages %}
+                    <div class="mb-6 space-y-3">
+                        {% for message in messages %}
+                            <div class="flex items-center gap-3 p-4 rounded-xl border text-sm font-medium shadow-sm transition-all animate-fade-in
+                                {% if message.tags == 'error' or message.tags == 'danger' %}
+                                    bg-rose-50 border-rose-200 text-rose-800
+                                {% elif message.tags == 'warning' %}
+                                    bg-amber-50 border-amber-200 text-amber-800
+                                {% elif message.tags == 'success' %}
+                                    bg-emerald-50 border-emerald-200 text-emerald-800
+                                {% else %}
+                                    bg-blue-50 border-blue-200 text-blue-800
+                                {% endif %}">
+                                <!-- Status Icons -->
+                                {% if message.tags == 'error' or message.tags == 'danger' %}
+                                    <svg class="w-5 h-5 text-rose-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                {% elif message.tags == 'warning' %}
+                                    <svg class="w-5 h-5 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                {% elif message.tags == 'success' %}
+                                    <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                {% else %}
+                                    <svg class="w-5 h-5 text-blue-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                {% endif %}
+                                <span class="flex-1">{{ message }}</span>
+                                <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 transition">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Content Block for Inheriting Pages -->
+                {% block content %}
+                <!-- Dynamic Content Will Be Injected Here -->
+                {% endblock %}
+                
+            </main>
+
+            <!-- Simple Professional Footer Include -->
+            {% include "clinics/includes/footer.html" %}
+        </div>
+    </div>
+
+    <!-- Vanilla Javascript helper for interactive UI behaviors -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Sidebar selectors
+            const sidebar = document.getElementById('app-sidebar');
+            const toggleBtn = document.getElementById('sidebar-toggle-btn');
+            const closeBtn = document.getElementById('sidebar-close-btn');
+            const overlay = document.getElementById('sidebar-overlay');
+
+            // Toggle Sidebar for mobile responsive view
+            const openSidebar = () => {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('opacity-0', 'pointer-events-none');
+                overlay.classList.add('opacity-100');
+            };
+
+            const closeSidebar = () => {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('opacity-0', 'pointer-events-none');
+                overlay.classList.remove('opacity-100');
+            };
+
+            if (toggleBtn) toggleBtn.addEventListener('click', openSidebar);
+            if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+            if (overlay) overlay.addEventListener('click', closeSidebar);
+
+            // Profile Dropdown interactive behavior
+            const dropdownBtn = document.getElementById('profile-dropdown-btn');
+            const dropdownMenu = document.getElementById('profile-dropdown-menu');
+
+            if (dropdownBtn && dropdownMenu) {
+                dropdownBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isOpened = !dropdownMenu.classList.contains('opacity-0');
+                    if (isOpened) {
+                        dropdownMenu.classList.add('opacity-0', 'pointer-events-none', 'scale-95');
+                        dropdownMenu.classList.remove('opacity-100', 'scale-100');
+                    } else {
+                        dropdownMenu.classList.remove('opacity-0', 'pointer-events-none', 'scale-95');
+                        dropdownMenu.classList.add('opacity-100', 'scale-100');
+                    }
+                });
+
+                // Close dropdown on click outside
+                window.addEventListener('click', () => {
+                    dropdownMenu.classList.add('opacity-0', 'pointer-events-none', 'scale-95');
+                    dropdownMenu.classList.remove('opacity-100', 'scale-100');
+                });
+            }
+        });
+    </script>
+</body>
+</html>

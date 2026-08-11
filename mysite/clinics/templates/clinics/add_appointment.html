@@ -1,0 +1,142 @@
+<!-- add_appointment.html -->
+{% extends "clinics/base.html" %}
+
+{% block title %}Add Appointment | {{ clinic.name }}{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-4xl space-y-8" data-testid="add-appointment-page">
+    <nav class="flex items-center gap-2 text-sm text-slate-500" aria-label="Breadcrumb" data-testid="add-appointment-breadcrumb">
+        <a href="{% url 'clinics:todays_dashboard' %}" class="transition hover:text-blue-600" data-testid="add-appointment-dashboard-link">
+            Dashboard
+        </a>
+        <svg class="h-4 w-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+        <span class="font-medium text-slate-700" data-testid="add-appointment-breadcrumb-current">Add appointment</span>
+    </nav>
+
+    <header data-testid="add-appointment-header">
+        <p class="text-sm font-semibold uppercase tracking-[0.18em] text-blue-600">Clinic schedule</p>
+        <h1 class="mt-2 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl" data-testid="add-appointment-title">
+            Book an appointment
+        </h1>
+        <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-500 sm:text-base" data-testid="add-appointment-description">
+            Create a new booking for a client at {{ clinic.name }}.
+        </p>
+    </header>
+
+    <form method="post" class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8" data-testid="add-appointment-form" onsubmit="this.querySelector('[data-submit-button]').disabled = true; this.querySelector('[data-submit-button]').classList.add('opacity-70'); this.querySelector('[data-submit-label]').textContent = 'Saving appointment…';">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="mb-6 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-medium text-rose-700" data-testid="add-appointment-form-errors">
+                {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+        {% endif %}
+
+        <section data-testid="add-appointment-booking-section">
+            <div class="mb-6 flex items-center gap-4 border-b border-slate-100 pb-5">
+                <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="font-bold text-slate-950">Booking details</h2>
+                    <p class="mt-1 text-sm text-slate-500">Choose the client, service, and team member.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                {% for field in form %}
+                    {% if field.name == "client" or field.name == "service" or field.name == "staff" %}
+                        <div>
+                            <label for="{{ field.id_for_label }}" class="mb-2 block text-sm font-semibold text-slate-700">
+                                {{ field.label }}{% if field.field.required %} <span class="text-rose-500">*</span>{% endif %}
+                            </label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <div class="mt-2 space-y-1 text-xs font-medium text-rose-600" data-testid="add-appointment-{{ field.name }}-errors">
+                                    {% for error in field.errors %}<p>{{ error }}</p>{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="mt-10 border-t border-slate-100 pt-8" data-testid="add-appointment-time-section">
+            <div class="mb-6">
+                <h2 class="text-lg font-bold text-slate-950">Date and status</h2>
+                <p class="mt-1 text-sm text-slate-500">Set when the appointment takes place and its current status.</p>
+            </div>
+
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                {% for field in form %}
+                    {% if field.name == "appointment_datetime" or field.name == "status" %}
+                        <div>
+                            <label for="{{ field.id_for_label }}" class="mb-2 block text-sm font-semibold text-slate-700">
+                                {{ field.label }}{% if field.field.required %} <span class="text-rose-500">*</span>{% endif %}
+                            </label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <div class="mt-2 space-y-1 text-xs font-medium text-rose-600" data-testid="add-appointment-{{ field.name }}-errors">
+                                    {% for error in field.errors %}<p>{{ error }}</p>{% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </section>
+
+        <section class="mt-10 border-t border-slate-100 pt-8" data-testid="add-appointment-notes-section">
+            {% for field in form %}
+                {% if field.name == "notes" %}
+                    <label for="{{ field.id_for_label }}" class="mb-2 block text-sm font-semibold text-slate-700">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                        <div class="mt-2 space-y-1 text-xs font-medium text-rose-600" data-testid="add-appointment-notes-errors">
+                            {% for error in field.errors %}<p>{{ error }}</p>{% endfor %}
+                        </div>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        </section>
+
+        <div class="mt-8 flex flex-col-reverse gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:justify-end">
+            <a href="{% url 'clinics:todays_dashboard' %}" class="inline-flex items-center justify-center rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:bg-slate-50" data-testid="add-appointment-cancel-button">
+                Cancel
+            </a>
+            <button type="submit" data-submit-button data-testid="add-appointment-submit-button" class="inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-blue-700">
+                <span data-submit-label>Save appointment</span>
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+    #id_client, #id_service, #id_staff, #id_appointment_datetime, #id_status, #id_notes {
+        width: 100%;
+        border: 1px solid #e2e8f0;
+        border-radius: .75rem;
+        background: #fff;
+        padding: .75rem .875rem;
+        color: #0f172a;
+        font-size: .875rem;
+        outline: none;
+        transition: border-color .2s, box-shadow .2s;
+    }
+
+    #id_notes {
+        min-height: 7rem;
+        resize: vertical;
+    }
+
+    #id_client:focus, #id_service:focus, #id_staff:focus, #id_appointment_datetime:focus, #id_status:focus, #id_notes:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, .12);
+    }
+</style>
+{% endblock %}

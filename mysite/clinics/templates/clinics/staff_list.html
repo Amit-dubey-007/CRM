@@ -1,0 +1,170 @@
+<!-- staff_list.html -->
+{% extends "clinics/base.html" %}
+
+{% block title %}Staff Management | {{ clinic.name }}{% endblock %}
+
+{% block content %}
+<div class="space-y-8" data-testid="staff-list-page">
+    <nav class="flex items-center gap-2 text-sm text-slate-500" aria-label="Breadcrumb" data-testid="staff-list-breadcrumb">
+        <a href="{% url 'clinics:todays_dashboard' %}" class="transition hover:text-blue-600" data-testid="staff-list-dashboard-link">
+            Dashboard
+        </a>
+        <svg class="h-4 w-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+        <span class="font-medium text-slate-700" data-testid="staff-list-breadcrumb-current">Staff</span>
+    </nav>
+
+    <header class="flex flex-col justify-between gap-5 sm:flex-row sm:items-end" data-testid="staff-list-header">
+        <div>
+            <p class="text-sm font-semibold uppercase tracking-[0.18em] text-blue-600">Team management</p>
+            <h1 class="mt-2 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl" data-testid="staff-list-title">
+                Your staff
+            </h1>
+            <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-500 sm:text-base" data-testid="staff-list-description">
+                Manage the people who help deliver exceptional care at {{ clinic.name }}.
+            </p>
+        </div>
+
+        <a href="{% url 'clinics:add_staff' clinic_id=clinic.id %}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-slate-200 transition hover:-translate-y-0.5 hover:bg-blue-700" data-testid="staff-list-add-button">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14M5 12h14"/>
+            </svg>
+            Add staff
+        </a>
+    </header>
+
+    {% if messages %}
+        <div class="space-y-3" data-testid="staff-list-messages">
+            {% for message in messages %}
+                <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-800" data-testid="staff-list-message">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <section class="rounded-3xl border border-slate-200 bg-white shadow-sm" data-testid="staff-list-card">
+        <div class="flex flex-col gap-4 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h2 class="text-lg font-bold text-slate-950">Team members</h2>
+                <p class="mt-1 text-sm text-slate-500">{{ staff_members|length }} member{{ staff_members|length|pluralize }} in this clinic</p>
+            </div>
+
+            <div class="relative w-full sm:max-w-xs">
+                <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m2.35-5.65a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <input type="search" placeholder="Search staff..." class="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-4 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-100" data-testid="staff-list-search-input">
+            </div>
+        </div>
+
+        {% if staff_members %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-left" data-testid="staff-list-table">
+                    <thead class="border-b border-slate-100 bg-slate-50/70">
+                        <tr class="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                            <th class="px-5 py-4">Staff member</th>
+                            <th class="px-5 py-4">Phone</th>
+                            <th class="px-5 py-4">Role</th>
+                            <th class="px-5 py-4">Joined</th>
+                            <th class="px-5 py-4">Status</th>
+                            <th class="px-5 py-4 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for staff in staff_members %}
+                            <tr class="group transition hover:bg-slate-50" data-testid="staff-row-{{ staff.id }}">
+                                <td class="px-5 py-4">
+                                    <div class="flex min-w-[220px] items-center gap-3">
+                                        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-sm font-bold text-blue-700 transition group-hover:bg-blue-600 group-hover:text-white" data-testid="staff-avatar-{{ staff.id }}">
+                                            {{ staff.user.first_name|first|upper }}{{ staff.user.last_name|first|upper }}
+                                        </span>
+                                        <div class="min-w-0">
+                                            <p class="truncate text-sm font-semibold text-slate-800" data-testid="staff-name-{{ staff.id }}">
+                                                {{ staff.user.get_full_name|default:staff.user.email }}
+                                            </p>
+                                            <p class="truncate text-xs text-slate-400" data-testid="staff-email-{{ staff.id }}">
+                                                {{ staff.user.email }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td class="whitespace-nowrap px-5 py-4 text-sm text-slate-600" data-testid="staff-phone-{{ staff.id }}">
+                                    {% if staff.user.phone %}
+                                        {{ staff.user.phone }}
+                                    {% else %}
+                                        <span class="text-slate-400">Not provided</span>
+                                    {% endif %}
+                                </td>
+
+                                <td class="whitespace-nowrap px-5 py-4">
+                                    {% if staff.role == "OWNER" %}
+                                        <span class="rounded-full bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700" data-testid="staff-role-{{ staff.id }}">
+                                            {{ staff.get_role_display }}
+                                        </span>
+                                    {% else %}
+                                        <span class="rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700" data-testid="staff-role-{{ staff.id }}">
+                                            {{ staff.get_role_display }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <td class="whitespace-nowrap px-5 py-4 text-sm text-slate-600" data-testid="staff-joined-date-{{ staff.id }}">
+                                    {{ staff.joined_at|date:"M d, Y" }}
+                                </td>
+
+                                <td class="whitespace-nowrap px-5 py-4">
+                                    {% if staff.is_active %}
+                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700" data-testid="staff-status-{{ staff.id }}">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                                            Active
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600" data-testid="staff-status-{{ staff.id }}">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-slate-400"></span>
+                                            Inactive
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <td class="whitespace-nowrap px-5 py-4">
+                                    <div class="flex justify-end gap-2">
+                                        <a href="{% url 'clinics:update_staff' clinic_id=clinic.id staff_id=staff.id %}" class="rounded-lg p-2 text-slate-400 transition hover:bg-blue-50 hover:text-blue-600" title="Edit staff member" data-testid="staff-edit-link-{{ staff.id }}">
+                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                                            </svg>
+                                        </a>
+                                        <a href="{% url 'clinics:remove_staff' clinic_id=clinic.id staff_id=staff.id %}" class="rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600" title="Remove staff member" data-testid="staff-remove-link-{{ staff.id }}">
+                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 7h12m-9 0v10m6-10v10M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m-9 0l1 13h10l1-13"/>
+                                            </svg>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="flex flex-col items-center justify-center px-6 py-16 text-center" data-testid="staff-list-empty-state">
+                <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                    <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </div>
+                <h3 class="mt-5 text-lg font-bold text-slate-950">Build your team</h3>
+                <p class="mt-2 max-w-sm text-sm leading-6 text-slate-500">Add staff members so your team can collaborate and manage the clinic together.</p>
+                <a href="{% url 'clinics:add_staff' clinic_id=clinic.id %}" class="mt-6 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-blue-700" data-testid="staff-empty-add-button">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14M5 12h14"/>
+                    </svg>
+                    Add first staff member
+                </a>
+            </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

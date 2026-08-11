@@ -1,0 +1,162 @@
+<!-- service_list.html -->
+{% extends "clinics/base.html" %}
+
+{% block title %}Services | {{ clinic.name }}{% endblock %}
+
+{% block content %}
+<div class="space-y-8" data-testid="service-list-page">
+    <nav class="flex items-center gap-2 text-sm text-slate-500" aria-label="Breadcrumb" data-testid="service-list-breadcrumb">
+        <a href="{% url 'clinics:todays_dashboard' %}" class="transition hover:text-blue-600" data-testid="service-list-dashboard-link">
+            Dashboard
+        </a>
+        <svg class="h-4 w-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+        <span class="font-medium text-slate-700" data-testid="service-list-breadcrumb-current">Services</span>
+    </nav>
+
+    <header class="flex flex-col justify-between gap-5 sm:flex-row sm:items-end" data-testid="service-list-header">
+        <div>
+            <p class="text-sm font-semibold uppercase tracking-[0.18em] text-amber-600">Clinic offerings</p>
+            <h1 class="mt-2 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl" data-testid="service-list-title">
+                Your services
+            </h1>
+            <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-500 sm:text-base" data-testid="service-list-description">
+                Manage the treatments and services your clinic offers to clients.
+            </p>
+        </div>
+
+        <a href="{% url 'clinics:add_service' clinic_id=clinic.id %}" class="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-slate-200 transition hover:-translate-y-0.5 hover:bg-amber-600" data-testid="service-list-add-button">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14M5 12h14"/>
+            </svg>
+            Add service
+        </a>
+    </header>
+
+    {% if messages %}
+        <div class="space-y-3" data-testid="service-list-messages">
+            {% for message in messages %}
+                <div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-800" data-testid="service-list-message">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <section class="rounded-3xl border border-slate-200 bg-white shadow-sm" data-testid="service-list-card">
+        <div class="flex flex-col gap-5 border-b border-slate-100 p-5 lg:flex-row lg:items-center lg:justify-between">
+            <div class="flex items-center gap-4">
+                <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50 text-amber-600">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 14l6-6M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Total services</p>
+                    <p class="mt-1 text-2xl font-extrabold text-slate-950" data-testid="service-total-count">{{ services|length }}</p>
+                </div>
+            </div>
+
+            <div class="relative w-full lg:max-w-sm">
+                <svg class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35m2.35-5.65a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <input type="search" placeholder="Search services..." class="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-4 text-sm text-slate-700 outline-none transition focus:border-amber-500 focus:bg-white focus:ring-4 focus:ring-amber-100" data-testid="service-search-input">
+            </div>
+        </div>
+
+        {% if services %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-left" data-testid="service-list-table">
+                    <thead class="border-b border-slate-100 bg-slate-50/70">
+                        <tr class="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                            <th class="px-5 py-4">Service name</th>
+                            <th class="px-5 py-4">Description</th>
+                            <th class="px-5 py-4">Duration</th>
+                            <th class="px-5 py-4">Price</th>
+                            <th class="px-5 py-4">Status</th>
+                            <th class="px-5 py-4 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for service in services %}
+                            <tr class="group transition hover:bg-slate-50" data-testid="service-row-{{ service.id }}">
+                                <td class="px-5 py-4">
+                                    <div class="flex min-w-[190px] items-center gap-3">
+                                        <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600 transition group-hover:bg-amber-500 group-hover:text-white">
+                                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 14l6-6M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                                            </svg>
+                                        </span>
+                                        <p class="text-sm font-semibold text-slate-800" data-testid="service-name-{{ service.id }}">{{ service.name }}</p>
+                                    </div>
+                                </td>
+
+                                <td class="max-w-xs px-5 py-4 text-sm text-slate-500">
+                                    <p class="truncate" data-testid="service-description-{{ service.id }}">
+                                        {{ service.description|default:"No description added." }}
+                                    </p>
+                                </td>
+
+                                <td class="whitespace-nowrap px-5 py-4 text-sm text-slate-600" data-testid="service-duration-{{ service.id }}">
+                                    {{ service.duration }} min
+                                </td>
+
+                                <td class="whitespace-nowrap px-5 py-4 text-sm font-bold text-slate-800" data-testid="service-price-{{ service.id }}">
+                                    {{ service.price|floatformat:2 }}
+                                </td>
+
+                                <td class="whitespace-nowrap px-5 py-4">
+                                    {% if service.is_active %}
+                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700" data-testid="service-status-{{ service.id }}">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                                            Active
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600" data-testid="service-status-{{ service.id }}">
+                                            <span class="h-1.5 w-1.5 rounded-full bg-slate-400"></span>
+                                            Inactive
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <td class="whitespace-nowrap px-5 py-4">
+                                    <div class="flex justify-end gap-2">
+                                        <a href="{% url 'clinics:update_service' clinic_id=clinic.id service_id=service.id %}" class="rounded-lg p-2 text-slate-400 transition hover:bg-blue-50 hover:text-blue-600" title="Edit service" data-testid="service-edit-link-{{ service.id }}">
+                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 20h9M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                                            </svg>
+                                        </a>
+                                        <a href="{% url 'clinics:delete_service' clinic_id=clinic.id service_id=service.id %}" class="rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600" title="Delete service" data-testid="service-delete-link-{{ service.id }}">
+                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 7h12m-9 0v10m6-10v10M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m-9 0l1 13h10l1-13"/>
+                                            </svg>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="flex flex-col items-center justify-center px-6 py-16 text-center" data-testid="service-list-empty-state">
+                <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-50 text-amber-600">
+                    <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 14l6-6M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <h3 class="mt-5 text-lg font-bold text-slate-950">Create your service menu</h3>
+                <p class="mt-2 max-w-sm text-sm leading-6 text-slate-500">Add your first service so clients and staff know what your clinic offers.</p>
+                <a href="{% url 'clinics:add_service' clinic_id=clinic.id %}" class="mt-6 inline-flex items-center gap-2 rounded-xl bg-amber-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-amber-200 transition hover:-translate-y-0.5 hover:bg-amber-600" data-testid="service-empty-add-button">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14M5 12h14"/>
+                    </svg>
+                    Add your first service
+                </a>
+            </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

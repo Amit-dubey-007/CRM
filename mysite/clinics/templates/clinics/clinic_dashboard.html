@@ -1,0 +1,22 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}Clinic Dashboard{% endblock %}
+
+{% block content %}
+    <h1>Clinic Dashboard</h1>
+    <p>Welcome to your clinic dashboard!</p>
+    <p>Here you can manage your clinic information and view relevant data.</p>
+    <p>Name: {{clinic.name}}</p>
+    <p>Address: {{clinic.address}}</p>
+    <p>Phone: {{clinic.phone}}</p>  
+    <p>Email: {{clinic.email}}</p>
+    {% if clinic.logo %}
+        <p>Logo: <img src="{{ clinic.logo.url }}" alt="Clinic Logo" width="100"></p>
+    {% endif %}
+    {% if clinic.website %}
+        <p>Website: {{clinic.website}}</p>
+    {% endif %}
+    <a href="{% url 'clinics:edit_clinic' clinic.id %}">Edit Clinic</a> |
+    <a href="{% url 'clinics:delete_clinic' clinic.id %}">Delete Clinic</a> |
+    <a href="{% url 'clinics:staff_list' clinic.id %}">Manage Staff</a>
+{% endblock %}

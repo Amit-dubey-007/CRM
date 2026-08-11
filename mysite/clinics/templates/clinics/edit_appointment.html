@@ -1,0 +1,96 @@
+<!-- edit_appointment.html -->
+{% extends "clinics/base.html" %}
+
+{% block title %}Edit Appointment | {{ clinic.name }}{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-4xl space-y-8" data-testid="edit-appointment-page">
+    <nav class="flex items-center gap-2 text-sm text-slate-500" aria-label="Breadcrumb" data-testid="edit-appointment-breadcrumb">
+        <a href="{% url 'clinics:todays_dashboard'  %}" class="transition hover:text-blue-600" data-testid="edit-appointment-dashboard-link">
+            Dashboard
+        </a>
+        <svg class="h-4 w-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+        <span class="font-medium text-slate-700" data-testid="edit-appointment-breadcrumb-current">Edit appointment</span>
+    </nav>
+
+    <header data-testid="edit-appointment-header">
+        <p class="text-sm font-semibold uppercase tracking-[0.18em] text-blue-600">Clinic schedule</p>
+        <h1 class="mt-2 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl" data-testid="edit-appointment-title">
+            Edit appointment
+        </h1>
+        <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-500 sm:text-base" data-testid="edit-appointment-description">
+            Update the booking details and status for this appointment.
+        </p>
+    </header>
+
+    <form method="post" class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8" data-testid="edit-appointment-form" onsubmit="this.querySelector('[data-submit-button]').disabled = true; this.querySelector('[data-submit-button]').classList.add('opacity-70'); this.querySelector('[data-submit-label]').textContent = 'Saving changes…';">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="mb-6 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-medium text-rose-700" data-testid="edit-appointment-form-errors">
+                {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="mb-8 rounded-2xl border border-blue-100 bg-blue-50/60 p-5" data-testid="edit-appointment-summary">
+            <p class="text-xs font-bold uppercase tracking-wider text-blue-600">Current booking</p>
+            <p class="mt-2 text-lg font-bold text-slate-950">{{ appointment.client }} · {{ appointment.service.name }}</p>
+            <p class="mt-1 text-sm text-slate-500">{{ appointment.appointment_datetime|date:"M d, Y · g:i A" }}</p>
+        </div>
+
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+            {% for field in form %}
+                <div class="{% if field.name == 'notes' %}sm:col-span-2{% endif %}">
+                    <label for="{{ field.id_for_label }}" class="mb-2 block text-sm font-semibold text-slate-700">
+                        {{ field.label }}{% if field.field.required %} <span class="text-rose-500">*</span>{% endif %}
+                    </label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <p class="mt-1.5 text-xs text-slate-400">{{ field.help_text }}</p>
+                    {% endif %}
+                    {% if field.errors %}
+                        <div class="mt-2 space-y-1 text-xs font-medium text-rose-600" data-testid="edit-appointment-{{ field.name }}-errors">
+                            {% for error in field.errors %}<p>{{ error }}</p>{% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="mt-8 flex flex-col-reverse gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:justify-end">
+            <a href="{% url 'clinics:todays_dashboard'  %}" class="inline-flex items-center justify-center rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:bg-slate-50" data-testid="edit-appointment-cancel-button">
+                Cancel
+            </a>
+            <button type="submit" data-submit-button data-testid="edit-appointment-submit-button" class="inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-blue-700">
+                <span data-submit-label>Save changes</span>
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+    #id_client, #id_service, #id_staff, #id_appointment_datetime, #id_status, #id_notes {
+        width: 100%;
+        border: 1px solid #e2e8f0;
+        border-radius: .75rem;
+        background: #fff;
+        padding: .75rem .875rem;
+        color: #0f172a;
+        font-size: .875rem;
+        outline: none;
+        transition: border-color .2s, box-shadow .2s;
+    }
+
+    #id_notes {
+        min-height: 7rem;
+        resize: vertical;
+    }
+
+    #id_client:focus, #id_service:focus, #id_staff:focus, #id_appointment_datetime:focus, #id_status:focus, #id_notes:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, .12);
+    }
+</style>
+{% endblock %}

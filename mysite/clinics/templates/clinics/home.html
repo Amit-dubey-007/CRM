@@ -1,0 +1,10 @@
+{% extends "accounts/base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+    <h1>Clinic Management</h1>
+    <p>Welcome to the Clinic Management System!</p>
+    <p>You don't have a clinic yet.</p>
+    <p><a href="{% url 'clinics:create_clinic' %}">Create a new clinic</a></p>
+{% endblock %}

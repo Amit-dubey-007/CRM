@@ -1,0 +1,121 @@
+<!-- update_staff.html -->
+{% extends "clinics/base.html" %}
+
+{% block title %}Update Staff | {{ clinic.name }}{% endblock %}
+
+{% block content %}
+<div class="mx-auto max-w-3xl space-y-8" data-testid="update-staff-page">
+    <nav class="flex items-center gap-2 text-sm text-slate-500" aria-label="Breadcrumb" data-testid="update-staff-breadcrumb">
+        <a href="{% url 'clinics:staff_list' clinic_id=clinic.id %}" class="transition hover:text-blue-600" data-testid="update-staff-breadcrumb-list">
+            Staff
+        </a>
+        <svg class="h-4 w-4 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+        <span class="font-medium text-slate-700" data-testid="update-staff-breadcrumb-current">Update staff</span>
+    </nav>
+
+    <header data-testid="update-staff-header">
+        <p class="text-sm font-semibold uppercase tracking-[0.18em] text-blue-600">Team management</p>
+        <h1 class="mt-2 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl" data-testid="update-staff-title">
+            Update staff access
+        </h1>
+        <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-500 sm:text-base" data-testid="update-staff-description">
+            Adjust this team member's role or active status in {{ clinic.name }}.
+        </p>
+    </header>
+
+    <form method="post" class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8" data-testid="update-staff-form" onsubmit="this.querySelector('[data-submit-button]').disabled = true; this.querySelector('[data-submit-button]').classList.add('opacity-70'); this.querySelector('[data-submit-label]').textContent = 'Saving changes…';">
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="mb-6 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm font-medium text-rose-700" data-testid="update-staff-form-errors">
+                {% for error in form.non_field_errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="mb-8 flex items-center gap-4 border-b border-slate-100 pb-6">
+            <div class="flex h-14 w-14 items-center justify-center rounded-full bg-blue-50 text-lg font-bold text-blue-700" data-testid="update-staff-avatar">
+                {{ staff_membership.user.first_name|first|upper }}{{ staff_membership.user.last_name|first|upper }}
+            </div>
+            <div class="min-w-0">
+                <h2 class="truncate font-bold text-slate-950" data-testid="update-staff-name">
+                    {{ staff_membership.user.get_full_name|default:staff_membership.user.email }}
+                </h2>
+                <p class="mt-1 truncate text-sm text-slate-500" data-testid="update-staff-email">
+                    {{ staff_membership.user.email }}
+                </p>
+            </div>
+        </div>
+
+        <div class="space-y-6">
+            {% for field in form %}
+                <div>
+                    <label for="{{ field.id_for_label }}" class="mb-2 block text-sm font-semibold text-slate-700">
+                        {{ field.label }}
+                        {% if field.field.required %}<span class="text-rose-500">*</span>{% endif %}
+                    </label>
+
+                    {{ field }}
+
+                    {% if field.help_text %}
+                        <p class="mt-1.5 text-xs text-slate-400">{{ field.help_text }}</p>
+                    {% endif %}
+
+                    {% if field.errors %}
+                        <div class="mt-2 space-y-1 text-xs font-medium text-rose-600" data-testid="update-staff-{{ field.name }}-errors">
+                            {% for error in field.errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="mt-8 flex flex-col-reverse gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:justify-between">
+            <a href="{% url 'clinics:remove_staff' clinic_id=clinic.id staff_id=staff_membership.id %}" class="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-rose-600 transition hover:bg-rose-50" data-testid="update-staff-remove-button">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M6 7h12m-9 0v10m6-10v10M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m-9 0l1 13h10l1-13"/>
+                </svg>
+                Remove member
+            </a>
+
+            <div class="flex flex-col-reverse gap-3 sm:flex-row">
+                <a href="{% url 'clinics:staff_list' clinic_id=clinic.id %}" class="inline-flex items-center justify-center rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:bg-slate-50" data-testid="update-staff-cancel-button">
+                    Cancel
+                </a>
+                <button type="submit" data-submit-button data-testid="update-staff-submit-button" class="inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-blue-700">
+                    <span data-submit-label>Save changes</span>
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+    #id_user, #id_role, #id_is_active {
+        width: 100%;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.75rem;
+        background: #fff;
+        padding: 0.75rem 0.875rem;
+        color: #0f172a;
+        font-size: 0.875rem;
+        outline: none;
+        transition: border-color .2s, box-shadow .2s;
+    }
+
+    #id_user:focus, #id_role:focus, #id_is_active:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, .12);
+    }
+
+    #id_is_active {
+        width: auto;
+        accent-color: #2563eb;
+    }
+</style>
+{% endblock %}
