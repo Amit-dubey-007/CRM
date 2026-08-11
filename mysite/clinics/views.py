@@ -40,16 +40,16 @@ def create_clinic(request):
     )
 
 def clinic_dashboard(request):
-    clinic = request.user.clinics.first()  # Assuming a user can have only one clinic
-    if not clinic:
-        return redirect("clinics:create_clinic")  # Redirect to create clinic if none exists
-    return render(
-        request,
-        "clinics/clinic_dashboard.html",
-        {
-            "clinic": clinic
-        }
-    )
+    # clinic = request.user.clinics.first()  # Assuming a user can have only one clinic
+    # if not clinic:
+    #     return redirect("clinics:create_clinic")  # Redirect to create clinic if none exists
+    # return render(
+    #     request,
+    #     "clinics/clinic_dashboard.html",
+    #     {
+    #         "clinic": clinic
+    #     }
+    return redirect("clinics:home")
 
 def edit_clinic(request, clinic_id):
     clinic = get_object_or_404(Clinic, id=clinic_id)
@@ -105,7 +105,7 @@ def home(request):
     clinic = Clinic.objects.filter(owner=request.user).first()
     if clinic:
         return redirect("clinics:todays_dashboard")
-    return render(request, "clinics/home.html")
+    return redirect("clinics:create_clinic")
 
 def add_staff(request, clinic_id):
     clinic = get_object_or_404(Clinic, id=clinic_id)
