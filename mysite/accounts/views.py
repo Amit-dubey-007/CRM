@@ -23,7 +23,7 @@ from django.shortcuts import render, redirect
 
 def login_view(request):
     if request.user.is_authenticated:
-        return redirect("clinics:dashboard")
+        return redirect("clinics:home")
 
     form = EmailAuthenticationForm(request, data=request.POST or None)
 
