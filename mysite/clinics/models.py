@@ -37,7 +37,8 @@ class StaffMembership(models.Model):
     role = models.CharField(
         max_length=10,
         choices=Role.choices,
-        default=Role.STAFF
+        default=Role.STAFF,
+        db_index=True
     )
 
     is_active = models.BooleanField(default=True)
@@ -46,6 +47,11 @@ class StaffMembership(models.Model):
 
     class Meta:
         unique_together = ("clinic", "user")
+
+        indexes = [
+            models.Index(fields=["clinic"]),
+            models.Index(fields=["clinic", "user"]),
+        ]
 
     def __str__(self):
         return f"{self.user.email} - {self.clinic.name} - {self.role}"
@@ -66,11 +72,11 @@ class Client(models.Model):
         related_name="clients"
     )
 
-    first_name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100, blank=True)
+    first_name = models.CharField(max_length=100,db_index=True)
+    last_name = models.CharField(max_length=100, blank=True,db_index=True)
 
-    phone = models.CharField(max_length=15)
-    email = models.EmailField(blank=True)
+    phone = models.CharField(max_length=15,db_index=True)
+    email = models.EmailField(blank=True,db_index=True)
 
     gender = models.CharField(
         max_length=25,
@@ -101,6 +107,14 @@ class Client(models.Model):
     def __str__(self):
         return f"{self.first_name} {self.last_name}".strip()
 
+    class Meta:
+        indexes = [
+            models.Index(fields=["clinic"]),
+            models.Index(fields=["clinic", "first_name"]),
+            models.Index(fields=["clinic", "last_name"]),
+            models.Index(fields=["clinic", "phone"]),
+        ]
+
 
 class Service(models.Model):
 
@@ -110,9 +124,9 @@ class Service(models.Model):
         related_name="services"
     )
 
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=200,db_index=True)
 
-    description = models.TextField(blank=True)
+    description = models.TextField(blank=True,db_index=True)
 
     duration = models.PositiveIntegerField(
         help_text="Duration in minutes"
@@ -123,7 +137,7 @@ class Service(models.Model):
         decimal_places=2
     )
 
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=True,db_index=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -134,6 +148,12 @@ class Service(models.Model):
 
     def __str__(self):
         return self.name
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=["clinic"]),
+            models.Index(fields=["clinic", "name"]),
+        ]
 
 
 class Appointment(models.Model):
@@ -170,12 +190,13 @@ class Appointment(models.Model):
         related_name="appointments"
     )
 
-    appointment_datetime = models.DateTimeField()
+    appointment_datetime = models.DateTimeField(db_index=True)
 
     status = models.CharField(
         max_length=20,
         choices=Status.choices,
-        default=Status.SCHEDULED
+        default=Status.SCHEDULED,
+        db_index=True
     )
 
     notes = models.TextField(blank=True)
@@ -200,3 +221,9 @@ class Appointment(models.Model):
             f"{self.appointment_datetime}"
         )
 
+    class Meta:
+        indexes = [
+            models.Index(fields=["clinic"]),
+            models.Index(fields=["clinic", "appointment_datetime"]),
+            models.Index(fields=["clinic", "status"]),
+        ]

@@ -71,4 +71,10 @@ urlpatterns = [
         "today-dashboard",views.todays_dashboard,name="todays_dashboard"
     ),
     path("base",views.base,name="base"),
+
+    path(
+        "search/",
+        views.global_search,
+        name="global_search",
+    ),
 ]

@@ -163,14 +163,30 @@ def staff_list(request, clinic_id):
     if clinic.owner != request.user:
         return redirect("clinics:home")  # Redirect if the user is not the owner of the clinic
 
-    staff_memberships = clinic.members.all()
+    q = request.GET.get("q", "").strip()
+
+    staff = (
+        StaffMembership.objects
+        .filter(clinic=clinic)
+        .select_related("user")
+    )
+
+    if q:
+        staff = staff.filter(
+            Q(user__first_name__icontains=q) |
+            Q(user__last_name__icontains=q) |
+            Q(user__email__icontains=q)
+        )
+
+    staff = staff.order_by("user__first_name", "user__last_name")
+
 
     return render(
         request,
         "clinics/staff_list.html",
         {
             "clinic": clinic,
-            "staff_members": staff_memberships
+            "staff_members": staff
         }
     )
 
@@ -272,7 +288,19 @@ def client_list(request, clinic_id):
     if not user_can_access_clinic(request.user, clinic):
         return redirect("clinics:home")
 
-    clients = clinic.clients.all().order_by("-created_at")  # Order clients by creation date, newest first
+    q = request.GET.get("q", "").strip()
+
+    clients = clinic.clients.filter(is_active=True)
+
+    if q:
+        clients = clients.filter(
+            Q(first_name__icontains=q) |
+            Q(last_name__icontains=q) |
+            Q(email__icontains=q) |
+            Q(phone__icontains=q)
+        )
+
+    clients = clients.order_by("-created_at")
     return render(
         request,
         "clinics/client_list.html",
@@ -344,7 +372,17 @@ def service_list(request, clinic_id):
     if not user_can_access_clinic(request.user, clinic):
         return redirect("clinics:home")
 
-    services = clinic.services.all().order_by("name")
+    q = request.GET.get("q", "").strip()
+
+    services = clinic.services.filter(is_active=True)
+
+    if q:
+        services = services.filter(
+            Q(name__icontains=q) |
+            Q(description__icontains=q)
+        )
+
+    services = services.order_by("name")
 
     return render(
         request,
@@ -435,9 +473,10 @@ def delete_service(request, clinic_id, service_id):
         },
     )
 
+from django.db.models import Q
+
 @login_required
 def appointment_list(request, clinic_id):
-
     clinic = get_object_or_404(
         Clinic,
         id=clinic_id
@@ -446,13 +485,30 @@ def appointment_list(request, clinic_id):
     if not user_can_access_clinic(request.user, clinic):
         return redirect("clinics:home")
 
-    appointments = clinic.appointments.select_related(
-        "client",
-        "service",
-        "staff"
-    ).order_by(
-        "-appointment_datetime",
+    q = request.GET.get("q", "").strip()
+
+    appointments = (
+        clinic.appointments
+        .select_related(
+            "client",
+            "service",
+            "staff",
+            "staff__user",
+        )
     )
+
+    if q:
+        appointments = appointments.filter(
+            Q(client__first_name__icontains=q) |
+            Q(client__last_name__icontains=q) |
+            Q(client__phone__icontains=q) |
+            Q(service__name__icontains=q) |
+            Q(staff__user__first_name__icontains=q) |
+            Q(staff__user__last_name__icontains=q) |
+            Q(status__icontains=q)
+        )
+
+    appointments = appointments.order_by("-appointment_datetime")
 
     return render(
         request,
@@ -460,6 +516,7 @@ def appointment_list(request, clinic_id):
         {
             "clinic": clinic,
             "appointments": appointments,
+            "search_query": q,
         },
     )
 
@@ -692,3 +749,118 @@ def todays_dashboard(request):
 
 def base(request):
     return render(request,"clinics:base.html")
+
+from django.db.models import Q
+from django.http import JsonResponse
+
+
+@login_required
+def global_search(request):
+    query = request.GET.get("q", "").strip()
+
+    if len(query) < 2:
+        return JsonResponse({
+            "clients": [],
+            "staff": [],
+            "services": [],
+            "appointments": [],
+            "knowledge": [],
+        })
+
+    clinic = request.user.clinics.first()
+
+    if not clinic:
+        return JsonResponse({"error": "Clinic not found"}, status=404)
+
+    if not user_can_access_clinic(request.user, clinic):
+        return JsonResponse({"error": "Permission denied"}, status=403)
+
+    clients = (
+        clinic.clients
+        .filter(
+            Q(first_name__icontains=query) |
+            Q(last_name__icontains=query) |
+            Q(phone__icontains=query)
+        )
+        .values(
+            "id",
+            "first_name",
+            "last_name",
+            "phone",
+        )[:5]
+    )
+
+    staff = (
+        StaffMembership.objects.filter(clinic=clinic)
+        .select_related("user")
+        .filter(
+            Q(user__first_name__icontains=query) |
+            Q(user__last_name__icontains=query) |
+            Q(user__email__icontains=query)
+        )
+        .values(
+            "id",
+            "user__first_name",
+            "user__last_name",
+            "user__email",
+        )[:5]
+    )
+
+    services = (
+        clinic.services
+        .filter(
+            Q(name__icontains=query) |
+            Q(description__icontains=query)
+        )
+        .values(
+            "id",
+            "name",
+            "price",
+        )[:5]
+    )
+
+    appointments = (
+        clinic.appointments
+        .select_related(
+            "client",
+            "service",
+        )
+        .filter(
+            Q(client__first_name__icontains=query) |
+            Q(client__last_name__icontains=query) |
+            Q(service__name__icontains=query)
+        )
+        .values(
+            "id",
+            "appointment_datetime",
+            "status",
+            "client__first_name",
+            "client__last_name",
+            "service__name",
+        )[:5]
+    )
+
+    knowledge = []
+
+    # Uncomment when Knowledge Base is implemented
+    #
+    # knowledge = (
+    #     clinic.knowledge_articles
+    #     .filter(
+    #         Q(title__icontains=query) |
+    #         Q(content__icontains=query)
+    #     )
+    #     .values(
+    #         "id",
+    #         "title",
+    #     )[:5]
+    # )
+
+    return JsonResponse({
+        "clients": list(clients),
+        "staff": list(staff),
+        "services": list(services),
+        "appointments": list(appointments),
+        "knowledge": knowledge,
+    })
+

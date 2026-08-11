@@ -24,25 +24,28 @@
     </div>
 
     <!-- Center Section: Premium Global Search Bar -->
-    <div class="hidden md:flex flex-1 max-w-md mx-8">
+    <div class="hidden md:flex flex-1 max-w-md mx-8 relative" id="global-search-container">
         <div class="relative w-full group">
             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                 <svg class="h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
             </div>
-            <input type="text" placeholder="Search appointments, staff, clients..." 
-                   class="w-full rounded-full border border-slate-200 bg-slate-50 py-1.5 pl-9 pr-4 text-sm text-slate-900 placeholder-slate-400 transition-all focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100">
+            <input type="text" id="global-search-input" placeholder="Search appointments, staff, clients..." 
+                   class="w-full rounded-full border border-slate-200 bg-slate-50 py-1.5 pl-9 pr-4 text-sm text-slate-900 placeholder-slate-400 transition-all focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-100"
+                   autocomplete="off" aria-expanded="false" aria-autocomplete="list" role="combobox" aria-controls="global-search-dropdown">
             <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-[10px] font-semibold text-slate-400 uppercase tracking-widest bg-slate-100 px-1.5 py-0.5 rounded-md my-auto h-5 mr-1 border border-slate-200">
                 ⌘K
             </div>
         </div>
+        <!-- Floating Dropdown -->
+        <div id="global-search-dropdown" class="absolute left-0 right-0 top-full mt-2 hidden z-50 max-h-[400px] overflow-y-auto rounded-xl border border-slate-200 bg-white p-2 shadow-xl" role="listbox"></div>
     </div>
 
     <!-- Right Section: Alerts, Notifications, Profile Dropdown -->
     <div class="flex items-center gap-4">
         <!-- Search Button (Visible only on Mobile) -->
-        <button class="md:hidden p-2 rounded-full text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <button id="mobile-search-toggle-btn" class="md:hidden p-2 rounded-full text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition focus:outline-none focus:ring-2 focus:ring-blue-500">
             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
@@ -124,6 +127,155 @@
                     </form>
                 </div>
             </div>
+<!-- Mobile Search Modal (Overlay) -->
+<div id="mobile-search-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm p-4 pt-16 sm:p-6 sm:pt-20">
+    <div class="mx-auto max-w-lg rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 flex flex-col overflow-hidden border border-slate-200">
+        <!-- Search Header -->
+        <div class="relative flex items-center border-b border-slate-100 p-4">
+            <svg class="pointer-events-none absolute left-7 h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input type="text" id="mobile-search-input" placeholder="Search appointments, staff, clients..." 
+                   class="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-11 pr-10 text-sm text-slate-900 placeholder-slate-400 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-100" autocomplete="off">
+            <button id="close-mobile-search-btn" class="absolute right-7 text-slate-400 hover:text-slate-600 focus:outline-none transition-colors">
+                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <!-- Search Results (Scrollable) -->
+        <div id="mobile-search-results" class="max-h-[360px] overflow-y-auto p-2" role="listbox">
+            <div class="p-8 text-center text-sm text-slate-400">
+                <svg class="mx-auto h-8 w-8 text-slate-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                Type at least 2 characters to search...
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const cid = "{{ request.user.clinics.first.id }}", desktopInput = document.getElementById("global-search-input"), desktopDropdown = document.getElementById("global-search-dropdown");
+    const mobileToggleBtn = document.getElementById("mobile-search-toggle-btn"), mobileModal = document.getElementById("mobile-search-modal");
+    const mobileInput = document.getElementById("mobile-search-input"), mobileResults = document.getElementById("mobile-search-results"), closeMobileBtn = document.getElementById("close-mobile-search-btn");
+
+    const render = (data, el) => {
+        el.innerHTML = '';
+        let count = 0;
+        const secs = [
+            { k: 'clients', t: 'Clients', i: '👤', l: item => `/${cid}/update-client/${item.id}/`, m: item => `${item.first_name} ${item.last_name}`, s: item => item.phone || 'No phone' },
+            { k: 'staff', t: 'Staff', i: '👨', l: item => `/${cid}/update-staff/${item.id}/`, m: item => `${item.user__first_name} ${item.user__last_name}`, s: item => item.user__email },
+            { k: 'services', t: 'Services', i: '✨', l: item => `/${cid}/service/${item.id}/edit/`, m: item => item.name, s: item => `$${item.price}` },
+            { k: 'appointments', t: 'Appointments', i: '📅', l: item => `/${cid}/appointment/${item.id}/edit/`, m: item => `${item.client__first_name} ${item.client__last_name} • ${item.service__name}`, s: item => {
+                const dt = new Date(item.appointment_datetime);
+                return `${dt.toLocaleDateString(undefined, {month: 'short', day: 'numeric'})} • ${dt.toLocaleTimeString(undefined, {hour: '2-digit', minute: '2-digit'})} • <span class="capitalize px-1 bg-slate-100 rounded text-[10px] text-slate-500">${item.status}</span>`;
+            }},
+            { k: 'knowledge', t: 'Knowledge', i: '📄', l: () => '#', m: item => item.title, s: () => '' }
+        ];
+
+        secs.forEach(sec => {
+            const list = data[sec.k] || [];
+            if (!list.length) return;
+            count += list.length;
+            const h = document.createElement('div');
+            h.className = 'px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-slate-400 mt-2 first:mt-1';
+            h.textContent = sec.t;
+            el.appendChild(h);
+
+            list.forEach(item => {
+                const link = document.createElement('a');
+                link.href = sec.l(item);
+                link.className = 'search-item flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition focus:outline-none focus:bg-slate-50';
+                link.setAttribute('role', 'option');
+                link.innerHTML = `<span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-50 border border-slate-100 text-base">${sec.i}</span><div class="flex-1 min-w-0"><div class="font-semibold text-slate-900 truncate">${sec.m(item)}</div><div class="text-xs text-slate-500 truncate mt-0.5">${sec.s(item)}</div></div>`;
+                el.appendChild(link);
+            });
+        });
+
+        if (!count) {
+            el.innerHTML = `<div class="p-8 text-center text-sm text-slate-500"><span class="text-3xl block mb-2">🔍</span><div class="font-bold text-slate-800">No results found</div><div class="text-slate-400 text-xs mt-1">Try another keyword.</div></div>`;
+        }
+    };
+
+    const setup = (input, results, isMob) => {
+        let timer, items = [], active = -1;
+        const update = () => {
+            items.forEach((item, idx) => {
+                if (idx === active) {
+                    item.classList.add('bg-slate-50', 'text-slate-900', 'ring-1', 'ring-slate-100');
+                    item.scrollIntoView({ block: 'nearest' });
+                } else {
+                    item.classList.remove('bg-slate-50', 'text-slate-900', 'ring-1', 'ring-slate-100');
+                }
+            });
+        };
+
+        input.addEventListener('input', () => {
+            const q = input.value.trim();
+            clearTimeout(timer);
+            if (q.length < 2) {
+                if (isMob) results.innerHTML = `<div class="p-8 text-center text-sm text-slate-400"><span class="text-3xl block mb-2">🔍</span>Type at least 2 characters to search...</div>`;
+                else results.classList.add('hidden');
+                return;
+            }
+            if (!isMob) results.classList.remove('hidden');
+            results.innerHTML = `<div class="p-8 text-center text-sm text-slate-500"><span class="inline-block animate-spin mr-2">⏳</span>Searching...</div>`;
+            timer = setTimeout(() => {
+                fetch(`{% url 'clinics:global_search' %}?q=${encodeURIComponent(q)}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        render(data, results);
+                        items = Array.from(results.querySelectorAll('.search-item'));
+                        active = -1;
+                        items.forEach((item, idx) => {
+                            item.addEventListener('mouseenter', () => {
+                                active = idx;
+                                items.forEach((el, i) => {
+                                    if (i === idx) el.classList.add('bg-slate-50', 'text-slate-900', 'ring-1', 'ring-slate-100');
+                                    else el.classList.remove('bg-slate-50', 'text-slate-900', 'ring-1', 'ring-slate-100');
+                                });
+                            });
+                        });
+                    })
+                    .catch(() => {
+                        results.innerHTML = '<div class="p-8 text-center text-sm text-red-500">Failed to load results.</div>';
+                    });
+            }, 300);
+        });
+
+        input.addEventListener('keydown', e => {
+            if (!isMob && results.classList.contains('hidden')) return;
+            if (e.key === 'ArrowDown') { e.preventDefault(); if (items.length) { active = (active + 1) % items.length; update(); } }
+            else if (e.key === 'ArrowUp') { e.preventDefault(); if (items.length) { active = (active - 1 + items.length) % items.length; update(); } }
+            else if (e.key === 'Enter') { if (active >= 0 && active < items.length) { e.preventDefault(); items[active].click(); } }
+            else if (e.key === 'Escape') { e.preventDefault(); if (isMob) closeMob(); else { results.classList.add('hidden'); input.blur(); } }
+        });
+    };
+
+    setup(desktopInput, desktopDropdown, false);
+    setup(mobileInput, mobileResults, true);
+
+    document.addEventListener("click", e => { if (!desktopInput.contains(e.target) && !desktopDropdown.contains(e.target)) desktopDropdown.classList.add("hidden"); });
+    const openMob = () => { mobileModal.classList.remove("hidden"); document.body.classList.add("overflow-hidden"); setTimeout(() => mobileInput.focus(), 50); };
+    const closeMob = () => { mobileModal.classList.add("hidden"); document.body.classList.remove("overflow-hidden"); mobileInput.value = ''; mobileResults.innerHTML = `<div class="p-8 text-center text-sm text-slate-400"><span class="text-3xl block mb-2">🔍</span>Type at least 2 characters to search...</div>`; };
+
+    mobileToggleBtn.addEventListener("click", openMob);
+    closeMobileBtn.addEventListener("click", closeMob);
+    mobileModal.addEventListener("click", e => { if (e.target === mobileModal) closeMob(); });
+
+    document.addEventListener("keydown", e => {
+        if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+            e.preventDefault();
+            if (window.innerWidth < 768) openMob();
+            else { desktopInput.focus(); if (desktopInput.value.trim().length >= 2) desktopDropdown.classList.remove("hidden"); }
+        }
+    });
+});
+</script>
+
+
         </div>
     </div>
 </header>
